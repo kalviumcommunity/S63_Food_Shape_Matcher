@@ -2,13 +2,14 @@
   "name": "s63_food_shape_matcher",
   "version": "1.0.0",
   "description": "Project Title: Food Shape Matcher\"",
-  "main": "index.js",
+  "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "node server.js"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "mongoose": "^8.9.7",
