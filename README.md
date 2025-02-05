@@ -24,3 +24,9 @@ Tech Stack:
 Why This Project:  
 This project is simple, fun, and interactive! It allows you to practice handling user input and displaying dynamic content based on that input. It’s perfect for practicing basic front-end development, especially with handling text inputs, arrays, and creating a clean, user-friendly interface. Plus, it’s a lighthearted and humorous app that anyone can enjoy, making it a great conversation starter!
 
+
+
+
+
+DEPLOYMENT LINK-----
+https://s63-food-shape-matcher.onrender.com
