@@ -4,8 +4,6 @@ const cors = require("cors");
 const connectDB = require("./connectDB"); // Import connectDB
 
 
-
-const express = require('express');
 const bodyParser = require('body-parser');
 const shapeRoutes = require('./routes');
 
@@ -15,9 +13,9 @@ const app = express();
 app.use(bodyParser.json());
 app.use('/api', shapeRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server is running on http://localhost:${PORT}`);
-});
+// app.listen(PORT, () => {
+//     console.log(`Server is running on http://localhost:${PORT}`);
+// });
 
 
 
