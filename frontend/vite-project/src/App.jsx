@@ -1,14 +1,14 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import LandingPage from "./pages/landingPages";
+// src/App.jsx
+import React from 'react';
+import FoodShapeMatcher from './components/FoodShapeMatcher';
 
-function App() {
-  return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-      </Routes>
-    </Router>
-  );
-}
+const App = () => {
+    return (
+        <div style={{ padding: '400px', fontFamily: 'Arial, sans-serif' }}>
+            <h1 style={{ textAlign: 'center' }}>Food Shape Matcher</h1>
+            <FoodShapeMatcher />
+        </div>
+    );
+};
 
 export default App;
