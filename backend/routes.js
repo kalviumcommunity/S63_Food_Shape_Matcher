@@ -1,52 +1,90 @@
 const express = require('express');
 const router = express.Router();
+const Entity = require('./models/entity'); // Adjust the path as necessary
 
-// Sample data structure to hold shapes and food suggestions
-let foodShapes = [
-    { id: 1, shape: 'circle', foods: ['Pizza', 'Cookies', 'Pancakes', 'Donuts', 'Bagels'] },
-    { id: 2, shape: 'triangle', foods: ['Slices of Pizza', 'Samosas', 'Nachos', 'Sandwiches'] },
-    { id: 3, shape: 'square', foods: ['Brownies', 'Toast', 'Sandwiches', 'Crackers'] },
-    { id: 4, shape: 'star', foods: ['Star-shaped Cookies', 'Cupcakes', 'Fruit Slices'] }
-];
+// Create a new entity (C)
+router.post('/entities', async (req, res) => {
+    try {
+    const { name, description } = req.body;
 
-// CREATE: Add a new shape and food suggestion
-router.post('/shapes', (req, res) => {
-    const { shape, foods } = req.body;
-    const newShape = { id: foodShapes.length + 1, shape, foods };
-    foodShapes.push(newShape);
-    res.status(201).json(newShape);
+    if (!name) {
+        return res.status(400).json({ message: 'Entity name is required' });
+    }
+
+    const newEntity = new Entity({ name, description });
+
+    
+        await newEntity.save();
+        return res.status(201).json(newEntity);
+    } catch (error) {
+        console.error('Error adding entity:', error);
+        return res.status(500).json({ message: 'Error adding entity' });
+    }
 });
 
-// READ: Get all shapes and food suggestions
-router.get('/shapes', (req, res) => {
-    res.json(foodShapes);
+// Read all entities (R)
+router.get('/entities', async (req, res) => {
+    try {
+        const entities = await Entity.find();
+        return res.status(200).json(entities);
+    } catch (error) {
+        console.error('Error fetching entities:', error);
+        return res.status(500).json({ message: 'Error fetching entities' });
+    }
 });
 
-// READ: Get a specific shape by ID
-router.get('/shapes/:id', (req, res) => {
-    const shape = foodShapes.find(s => s.id === parseInt(req.params.id));
-    if (!shape) return res.status(404).send('Shape not found.');
-    res.json(shape);
+// Read a single entity by ID (R)
+router.get('/entities/:id', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const entity = await Entity.findById(id);
+        if (!entity) {
+            return res.status(404).json({ message: 'Entity not found' });
+        }
+        return res.status(200).json(entity);
+    } catch (error) {
+        console.error('Error fetching entity:', error);
+        return res.status(500).json({ message: 'Error fetching entity' });
+    }
 });
 
-// UPDATE: Update a shape and its food suggestions
-router.put('/shapes/:id', (req, res) => {
-    const shape = foodShapes.find(s => s.id === parseInt(req.params.id));
-    if (!shape) return res.status(404).send('Shape not found.');
+// Update an entity by ID (U)
+router.put('/entities/:id', async (req, res) => {
+    
 
-    const { shape: newShape, foods } = req.body;
-    shape.shape = newShape;
-    shape.foods = foods;
-    res.json(shape);
+    try {
+        const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
+        return res.status(400).json({ message: 'Entity name is required' });
+    }
+        const updatedEntity = await Entity.findByIdAndUpdate(id, { name }, { new: true });
+        if (!updatedEntity) {
+            return res.status(404).json({ message: 'Entity not found' });
+        }
+        return res.status(200).json(updatedEntity);
+    } catch (error) {
+        console.error('Error updating entity:', error);
+        return res.status(500).json({ message: 'Error updating entity' });
+    }
 });
 
-// DELETE: Remove a shape and its food suggestions
-router.delete('/shapes/:id', (req, res) => {
-    const shapeIndex = foodShapes.findIndex(s => s.id === parseInt(req.params.id));
-    if (shapeIndex === -1) return res.status(404).send('Shape not found.');
+// Delete an entity by ID (D)
+router.delete('/entities/:id', async (req, res) => {
+    const { id } = req.params;
 
-    const deletedShape = foodShapes.splice(shapeIndex, 1);
-    res.json(deletedShape);
+    try {
+        const deletedEntity = await Entity.findByIdAndDelete(id);
+        if (!deletedEntity) {
+            return res.status(404).json({ message: 'Entity not found' });
+        }
+        return res.status(200).json({ message: 'Entity deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting entity:', error);
+        return res.status(500).json({ message: 'Error deleting entity' });
+    }
 });
 
 module.exports = router;

@@ -1,6 +1,6 @@
 import React from "react";
 
-const landingPage = () => {
+const LandingPage = () => {
   return (
     <div className="landing-container">
       <h1>Welcome to the Food Shape Matcher 🙇‍♂️</h1>
@@ -21,4 +21,4 @@ Track past shape inputs and food suggestions. 🚀</p>
   );
 };
 
-export default landingPage;
+export default LandingPage;
