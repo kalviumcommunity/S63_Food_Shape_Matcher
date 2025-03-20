@@ -1,18 +1,12 @@
-// models/entity.js
 const mongoose = require('mongoose');
 
 const entitySchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    description: {
-        type: String,
-        required: true,
-    }
-});
+    name: { type: String, required: true, trim: true },
 
-// Create a model from the schema
-const Entity = mongoose.model('Entity', entitySchema);
+    description: { type: String, required: true, trim: true },
 
-module.exports = Entity;
+    created_by: { type: String, required: true }, // Add created_by property
+    
+}, { timestamps: true });
+
+module.exports = mongoose.model('Entity', entitySchema);

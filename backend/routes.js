@@ -53,6 +53,10 @@ router.post('/entities', validateEntity, async (req, res) => {
     try {
         const { name, description } = req.body;
 
+        if (!created_by) {
+            return res.status(400).json({ message: 'Created by field is required' });
+        }
+
         const newEntity = new Entity({ name, description });
         await newEntity.save();
         return res.status(201).json({ message: 'Entity created successfully', entity: newEntity });
@@ -61,6 +65,37 @@ router.post('/entities', validateEntity, async (req, res) => {
         return res.status(500).json({ message: 'Error adding entity' });
     }
 });
+
+router.get('/entities/by-user/:user', async (req, res) => {
+    const { user } = req.params;
+
+    try {
+        const entities = await Entity.find({ created_by: user });
+        return res.status(200).json(entities);
+    } catch (error) {
+        console.error('Error fetching entities by user:', error);
+        return res.status(500).json({ message: 'Error fetching entities' });
+    }
+});
+router.get('/entities/filter/shape', async (req, res) => {
+    try {
+        const entities = await Entity.find({ type: 'Shape' }); // Adjust filter condition
+        res.status(200).json(entities);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching Shape entities' });
+    }
+});
+
+router.get('/entities/filter/suggestions', async (req, res) => {
+    try {
+        const entities = await Entity.find({ type: 'Suggestions' }); // Adjust filter condition
+        res.status(200).json(entities);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching Suggestions entities' });
+    }
+});
+
+
 
 // Read all entities (R)
 router.get('/entities', async (req, res) => {
