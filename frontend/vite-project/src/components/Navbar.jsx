@@ -10,6 +10,8 @@ const Navbar = () => {
                 <h1>FOOD SHAPE MATCHER</h1>
                 <ul><Link to="/">Home</Link></ul>
                 <ul><Link to="/add-entity">Add Entity</Link></ul>
+                <ul><Link to="/manage-entity">Manage Entity</Link></ul>
+                <ul><Link to="/update-entity">Update Entity</Link></ul>
             </ul>
         </nav>
     );
