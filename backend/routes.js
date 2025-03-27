@@ -4,6 +4,55 @@ const Joi = require('joi');
 const Entity = require('./models/entity'); // Adjust the path as necessary
 const User = require('./models/user'); // Import User model
 
+// Authentication endpoints
+router.post('/login', (req, res) => {
+    try {
+        const { username } = req.body;
+
+        if (!username) {
+            return res.status(400).json({ message: 'Username is required' });
+        }
+
+        // Find user in the in-memory users array
+        const user = inMemoryUsers.find(u => u.username === username);
+
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid username' });
+        }
+
+        // Set cookie with username
+        res.cookie('username', user.username, {
+            httpOnly: true,
+            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            sameSite: 'strict'
+        });
+
+        return res.status(200).json({
+            message: 'Login successful',
+            user: {
+                _id: user._id,
+                username: user.username,
+                displayName: user.displayName
+            }
+        });
+    } catch (error) {
+        console.error('Login error:', error);
+        return res.status(500).json({ message: 'Error during login' });
+    }
+});
+
+router.post('/logout', (req, res) => {
+    try {
+        // Clear the username cookie
+        res.clearCookie('username');
+        
+        return res.status(200).json({ message: 'Logout successful' });
+    } catch (error) {
+        console.error('Logout error:', error);
+        return res.status(500).json({ message: 'Error during logout' });
+    }
+});
+
 // In-memory data for users and entities (for demonstration purposes)
 const inMemoryUsers = [
     { 
@@ -316,5 +365,7 @@ router.delete('/entities/:id', (req, res) => {
         return res.status(500).json({ message: 'Error deleting entity' });
     }
 });
+
+
 
 module.exports = router;
