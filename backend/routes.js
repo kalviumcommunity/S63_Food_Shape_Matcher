@@ -3,28 +3,92 @@ const router = express.Router();
 const Joi = require('joi');
 const Entity = require('./models/entity'); // Adjust the path as necessary
 const User = require('./models/user'); // Import User model
+const { protect, generateToken } = require('./middleware/auth');
 
 // Authentication endpoints
-router.post('/login', (req, res) => {
+router.post('/register', async (req, res) => {
     try {
-        const { username } = req.body;
+        const { username, email, password, displayName } = req.body;
 
-        if (!username) {
-            return res.status(400).json({ message: 'Username is required' });
+        // Check if user already exists
+        const userExists = await User.findOne({ $or: [{ email }, { username }] });
+
+        if (userExists) {
+            return res.status(400).json({ 
+                message: 'User already exists',
+                field: userExists.email === email ? 'email' : 'username'
+            });
         }
 
-        // Find user in the in-memory users array
-        const user = inMemoryUsers.find(u => u.username === username);
+        // Create user
+        const user = await User.create({
+            username,
+            email,
+            password,
+            displayName
+        });
+
+        if (user) {
+            // Generate token
+            const token = generateToken(user._id);
+
+            // Set token in cookie
+            res.cookie('token', token, {
+                httpOnly: true,
+                maxAge: 24 * 60 * 60 * 1000, // 1 day
+                sameSite: 'strict',
+                secure: process.env.NODE_ENV === 'production'
+            });
+
+            return res.status(201).json({
+                message: 'User registered successfully',
+                user: {
+                    _id: user._id,
+                    username: user.username,
+                    email: user.email,
+                    displayName: user.displayName
+                }
+            });
+        } else {
+            return res.status(400).json({ message: 'Invalid user data' });
+        }
+    } catch (error) {
+        console.error('Registration error:', error);
+        return res.status(500).json({ message: 'Error during registration' });
+    }
+});
+
+router.post('/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).json({ message: 'Username and password are required' });
+        }
+
+        // Find user in database
+        const user = await User.findOne({ username });
 
         if (!user) {
-            return res.status(401).json({ message: 'Invalid username' });
+            return res.status(401).json({ message: 'Invalid credentials' });
         }
 
-        // Set cookie with username
-        res.cookie('username', user.username, {
+        // Check password
+        const isMatch = await user.comparePassword(password);
+
+        if (!isMatch) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        // Generate token
+        const token = generateToken(user._id);
+
+        // Set token in cookie
+        res.cookie('token', token, {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000, // 1 day
-            sameSite: 'strict'
+            sameSite: 'strict',
+            secure: process.env.NODE_ENV === 'production'
         });
 
         return res.status(200).json({
@@ -32,6 +96,7 @@ router.post('/login', (req, res) => {
             user: {
                 _id: user._id,
                 username: user.username,
+                email: user.email,
                 displayName: user.displayName
             }
         });
@@ -43,13 +108,25 @@ router.post('/login', (req, res) => {
 
 router.post('/logout', (req, res) => {
     try {
-        // Clear the username cookie
-        res.clearCookie('username');
+        // Clear the token cookie
+        res.clearCookie('token');
         
         return res.status(200).json({ message: 'Logout successful' });
     } catch (error) {
         console.error('Logout error:', error);
         return res.status(500).json({ message: 'Error during logout' });
+    }
+});
+
+// Get current user profile
+router.get('/me', protect, async (req, res) => {
+    try {
+        return res.status(200).json({
+            user: req.user
+        });
+    } catch (error) {
+        console.error('Get profile error:', error);
+        return res.status(500).json({ message: 'Error fetching profile' });
     }
 });
 
@@ -165,11 +242,8 @@ const entitySchema = Joi.object({
             'string.max': 'Description must be less than 200 characters',
         }),
     
-    created_by: Joi.string()
-        .required()
-        .messages({
-            'string.empty': 'Created by is required',
-        }),
+    // created_by is now optional in the request body since it's set from the authenticated user
+    created_by: Joi.string().optional()
 });
 
 // Validation middleware
@@ -191,20 +265,12 @@ const validateEntity = (req, res, next) => {
 // Routes
 
 // Create a new entity (C)
-router.post('/entities', validateEntity, (req, res) => {
+router.post('/entities', protect, validateEntity, (req, res) => {
     try {
-        const { name, description, created_by } = req.body;
+        const { name, description } = req.body;
+        const created_by = req.user._id;
 
-        if (!created_by) {
-            return res.status(400).json({ message: 'Created by field is required' });
-        }
-
-        // Verify that the user exists
-        const userExists = findUserById(created_by);
-        if (!userExists) {
-            return res.status(400).json({ message: 'User does not exist' });
-        }
-
+        // Create new entity
         const newEntity = {
             _id: Date.now().toString(),
             name,
@@ -313,15 +379,21 @@ router.get('/entities/:id', (req, res) => {
 });
 
 // Update an entity by ID (U)
-router.put('/entities/:id', validateEntity, (req, res) => {
+router.put('/entities/:id', protect, validateEntity, (req, res) => {
     const { id } = req.params;
     const { name, description } = req.body;
+    const userId = req.user._id;
 
     try {
         const entityIndex = inMemoryEntities.findIndex(e => e._id === id);
         
         if (entityIndex === -1) {
             return res.status(404).json({ message: 'Entity not found' });
+        }
+
+        // Check if user owns the entity
+        if (inMemoryEntities[entityIndex].created_by !== userId) {
+            return res.status(403).json({ message: 'Not authorized to update this entity' });
         }
 
         // Update the entity
@@ -343,14 +415,20 @@ router.put('/entities/:id', validateEntity, (req, res) => {
 });
 
 // Delete an entity by ID (D)
-router.delete('/entities/:id', (req, res) => {
+router.delete('/entities/:id', protect, (req, res) => {
     const { id } = req.params;
+    const userId = req.user._id;
 
     try {
         const entityIndex = inMemoryEntities.findIndex(e => e._id === id);
         
         if (entityIndex === -1) {
             return res.status(404).json({ message: 'Entity not found' });
+        }
+
+        // Check if user owns the entity
+        if (inMemoryEntities[entityIndex].created_by !== userId) {
+            return res.status(403).json({ message: 'Not authorized to delete this entity' });
         }
 
         // Remove the entity
