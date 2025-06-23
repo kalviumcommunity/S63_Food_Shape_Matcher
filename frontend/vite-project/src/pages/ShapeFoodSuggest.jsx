@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import axios from 'axios';
 
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const ShapeFoodSuggest = () => {
   const [shape, setShape] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -14,7 +16,7 @@ const ShapeFoodSuggest = () => {
     setSuggestions([]);
     setLoading(true);
     try {
-      const res = await axios.get('/api/food-suggestions', {
+      const res = await axios.get(`${apiUrl}/api/food-suggestions`, {
         params: { shape }
       });
       setSuggestions(res.data.suggestions);
