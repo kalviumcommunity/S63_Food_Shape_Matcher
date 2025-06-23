@@ -30,8 +30,8 @@ const LandingPage = () => {
         </ul>
       </div>
       
-      <Link to="/add-entity">
-        <button>Create your own!</button>
+      <Link to="/shape-food-suggest">
+        <button>Start Exploring</button>
       </Link>
     </div>
   );
