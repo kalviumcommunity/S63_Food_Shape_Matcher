@@ -2,7 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const connectDB = require("./connectDB"); // Import connectDB
+const connectDB = require("./connectDb"); // Fixed case sensitivity
 const bodyParser = require('body-parser');
 // const shapeRoutes = require('./routes');
 const routes = require('./routes'); 
@@ -14,7 +14,8 @@ app.use(cookieParser());
 
 app.use(express.json());
 app.use(cors());
-app.use('/api',routes);
+app.use('/api',routes);n
+
 // Connect to MongoDB Atlas
 connectDB();
 let entities = [];
