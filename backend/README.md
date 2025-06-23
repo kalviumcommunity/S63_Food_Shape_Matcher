@@ -29,4 +29,5 @@ This project is simple, fun, and interactive! It allows you to practice handling
 
 
 DEPLOYMENT LINK-----
-https://s63-food-shape-matcher.onrender.com
+frontend == https://foodshapematcher-bytanvi.netlify.app/
+backend == https://s63-food-shape-matcher-2.onrender.com
